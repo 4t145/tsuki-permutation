@@ -1,4 +1,4 @@
-use crate::Permutation;
+use crate::{Permutation, Group};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Alternating<const N: usize>(Permutation<N>);
@@ -68,4 +68,15 @@ impl<const N: usize> std::ops::Mul<usize> for &Alternating<N> {
         unsafe { Alternating::<N>::new_unchecked(self.0.mul(rhs)) }
     }
 }
-    
+
+impl<const N: usize> Group for Alternating<N> {
+    fn unit() -> Self {
+        Self::unit()
+    }
+    fn inverse(&self) -> Self {
+        self.inverse()
+    }
+    fn op(&self, rhs: Self) -> Self {
+        self.compose(&rhs)
+    }
+}  
