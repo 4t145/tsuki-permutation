@@ -4,6 +4,8 @@ mod alternating;
 pub use alternating::*;
 mod cyclic;
 pub use cyclic::*;
+mod dihedral;
+pub use dihedral::*;
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Parity {
@@ -92,3 +94,40 @@ impl<G: Group> Group for Commutator<G> {
         Self(self.0.op(&rhs.0), self.1.op(&rhs.1))
     }
 }
+
+macro_rules! impl_tuple {
+    {@$call:ident #rev $first:literal, $($index:literal,)*; $($rev: literal,)*} => {
+        impl_tuple!(@$call #rev $($index,)*; $first, $($rev,)* );
+    };
+    {@$call:ident #rev ; $($rev: literal,)*} => {
+        impl_tuple!(@$call $($rev,)*);
+    };
+    {@gen $last:literal,  $($index:literal,)*} => {
+        impl_tuple!(@gen $($index,)*);
+        impl_tuple!(@item #rev $last, $($index,)*; );
+    };
+    {@gen } => {
+        impl_tuple!(@item);
+    };
+    {@item $($index:literal,)*} => {
+        paste::paste! {
+            #[allow(clippy::unused_unit, unused_variables)]
+            impl<$([<T $index>]: $crate::Group),*> $crate::Group for ($([<T $index>],)*) {
+                fn unit() -> Self {
+                    ($([<T $index>]::unit(),)*)
+                }
+                fn inverse(&self) -> Self {
+                    ($(self.$index.inverse(),)*)
+                }
+                fn op(&self, rhs: &Self) -> Self {
+                    ($(self.$index.op(&rhs.$index),)*)
+                }
+            }
+        }
+    };
+    {$($tt:literal),* $(,)?} => {
+        impl_tuple!(@gen #rev $($tt,)*;);
+    };
+}
+
+impl_tuple! {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}
