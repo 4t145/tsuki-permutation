@@ -1,6 +1,6 @@
 use crate::Group;
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Cyclic<const N: usize>(usize);
 
 impl<const N: usize> Cyclic<N> {
@@ -25,7 +25,7 @@ impl<const N: usize> Group for Cyclic<N> {
     fn inverse(&self) -> Self {
         self.inverse()
     }
-    fn op(&self, rhs: Self) -> Self {
-        self.compose(&rhs)
+    fn op(&self, rhs: &Self) -> Self {
+        self.compose(rhs)
     }
 } 

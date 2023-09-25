@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::{Parity, Group};
+use crate::{Alternating, Group, Parity};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Permutation<const N: usize> {
@@ -122,7 +122,6 @@ impl<const N: usize> std::ops::Mul<usize> for &Permutation<N> {
     }
 }
 
-
 impl<const N: usize> Group for Permutation<N> {
     fn unit() -> Self {
         Self::unit()
@@ -130,8 +129,14 @@ impl<const N: usize> Group for Permutation<N> {
     fn inverse(&self) -> Self {
         self.inverse()
     }
-    fn op(&self, rhs: Self) -> Self {
-        self.compose(&rhs)
+    fn op(&self, rhs: &Self) -> Self {
+        self.compose(rhs)
+    }
+}
+
+impl<const N: usize> From<Alternating<N>> for Permutation<N> {
+    fn from(val: Alternating<N>) -> Self {
+        val.0
     }
 }
 
