@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::{Alternating, Group, Parity};
+use crate::{Alternating, FiniteGroup, Group, Parity};
 pub type S<const N: usize> = Permutation<N>;
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Permutation<const N: usize> {
@@ -32,7 +32,7 @@ impl<const N: usize> Permutation<N> {
     pub unsafe fn new_unchecked(perm: [u8; N]) -> Self {
         Self { perm }
     }
-    
+
     pub const fn unit() -> Self {
         let mut perm = [0; N];
         let mut idx = 0;
@@ -138,6 +138,27 @@ impl<const N: usize> Group for Permutation<N> {
     }
     fn op(&self, rhs: &Self) -> Self {
         self.compose(rhs)
+    }
+}
+
+impl<const N: usize> FiniteGroup for Permutation<N> {
+    fn order() -> usize {
+        N
+    }
+
+    fn enumerate() -> Box<dyn Iterator<Item = Self>>
+    where
+        Self: Sized,
+    {
+        Box::new((0..N).map(|i| {
+            let mut perm = [0; N];
+            let mut idx = 0;
+            while idx < N {
+                perm[idx] = (idx + i) as u8 % N as u8;
+                idx += 1;
+            }
+            unsafe { Self::new_unchecked(perm) }
+        }))
     }
 }
 

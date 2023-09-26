@@ -11,16 +11,16 @@ impl<const N: usize> Alternating<N> {
     }
     /// # Safety
     /// perm must be an even permutation.
-    pub unsafe fn new_unchecked(perm: Permutation<N>) -> Self {
+    pub const unsafe fn new_unchecked(perm: Permutation<N>) -> Self {
         Self(perm)
     }
-    pub fn unit() -> Self {
+    pub const fn unit() -> Self {
         Self(Permutation::unit())
     }
-    pub fn compose(&self, other: &Self) -> Self {
+    pub const fn compose(&self, other: &Self) -> Self {
         Self(self.0.compose(&other.0))
     }
-    pub fn inverse(&self) -> Self {
+    pub const fn inverse(&self) -> Self {
         Self(self.0.inverse())
     }
 }
