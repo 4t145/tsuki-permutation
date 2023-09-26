@@ -7,13 +7,20 @@ impl<const N: usize> Cyclic<N> {
     pub fn new(n: usize) -> Option<Self> {
         (n < N).then_some(Self(n))
     }
-    pub fn unit() -> Self {
+
+    /// # Safety
+    /// n must be less than N.
+    pub const unsafe fn new_unchecked(n: usize) -> Self {
+        Self(n)
+    }
+
+    pub const fn unit() -> Self {
         Self(0)
     }
-    pub fn inverse(&self) -> Self {
+    pub const fn inverse(&self) -> Self {
         Self(N - self.0)
     }
-    pub fn compose(&self, other: &Self) -> Self {
+    pub const fn compose(&self, other: &Self) -> Self {
         Self((self.0 + other.0) % N)
     }
 }
@@ -28,4 +35,4 @@ impl<const N: usize> Group for Cyclic<N> {
     fn op(&self, rhs: &Self) -> Self {
         self.compose(rhs)
     }
-} 
+}
