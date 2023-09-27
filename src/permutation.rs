@@ -50,7 +50,7 @@ impl<const N: usize> Permutation<N> {
     }
 
     // O(n)
-    pub fn inverse(&self) -> Self {
+    pub fn inverse(self) -> Self {
         let mut perm = [0; N];
         for idx in 0..N {
             perm[self.perm[idx] as usize] = idx as u8
@@ -126,10 +126,10 @@ impl<const N: usize> Group for Permutation<N> {
     fn unit() -> Self {
         Self::unit()
     }
-    fn inverse(&self) -> Self {
+    fn inverse(self) -> Self {
         self.inverse()
     }
-    fn op(&self, rhs: &Self) -> Self {
+    fn op(self, rhs: &Self) -> Self {
         self.compose(rhs)
     }
 }

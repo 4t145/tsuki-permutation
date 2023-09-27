@@ -20,7 +20,7 @@ impl<const N: usize> Alternating<N> {
     pub fn compose(&self, other: &Self) -> Self {
         Self(self.0.compose(&other.0))
     }
-    pub fn inverse(&self) -> Self {
+    pub fn inverse(self) -> Self {
         Self(self.0.inverse())
     }
 }
@@ -29,10 +29,10 @@ impl<const N: usize> Group for Alternating<N> {
     fn unit() -> Self {
         Self::unit()
     }
-    fn inverse(&self) -> Self {
+    fn inverse(self) -> Self {
         self.inverse()
     }
-    fn op(&self, rhs: &Self) -> Self {
+    fn op(self, rhs: &Self) -> Self {
         self.compose(rhs)
     }
 }

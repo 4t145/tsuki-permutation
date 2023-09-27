@@ -1,4 +1,6 @@
 mod permutation;
+use std::marker::PhantomData;
+
 pub use permutation::*;
 mod alternating;
 pub use alternating::*;
@@ -30,16 +32,16 @@ impl Parity {
 
 pub trait Group: Clone {
     fn unit() -> Self;
-    fn inverse(&self) -> Self;
-    fn op(&self, rhs: &Self) -> Self;
+    fn inverse(self) -> Self;
+    fn op(self, rhs: &Self) -> Self;
 }
 
 pub fn commutator<G: Group>(a: &G, b: &G) -> G {
-    a.inverse().op(&b.inverse()).op(a).op(b)
+    a.clone().inverse().op(&b.clone().inverse()).op(a).op(b)
 }
 
 pub fn conjugate<G: Group>(a: &G, b: &G) -> G {
-    b.inverse().op(a).op(b)
+    b.clone().inverse().op(a).op(b)
 }
 
 pub trait FiniteGroup: Group {
@@ -87,10 +89,10 @@ impl<G: Group> Group for Commutator<G> {
     fn unit() -> Self {
         Self(G::unit(), G::unit())
     }
-    fn inverse(&self) -> Self {
-        Self(self.1.clone(), self.0.clone())
+    fn inverse(self) -> Self {
+        Self(self.1, self.0)
     }
-    fn op(&self, rhs: &Self) -> Self {
+    fn op(self, rhs: &Self) -> Self {
         Self(self.0.op(&rhs.0), self.1.op(&rhs.1))
     }
 }
@@ -116,10 +118,10 @@ macro_rules! impl_tuple {
                 fn unit() -> Self {
                     ($([<T $index>]::unit(),)*)
                 }
-                fn inverse(&self) -> Self {
+                fn inverse(self) -> Self {
                     ($(self.$index.inverse(),)*)
                 }
-                fn op(&self, rhs: &Self) -> Self {
+                fn op(self, rhs: &Self) -> Self {
                     ($(self.$index.op(&rhs.$index),)*)
                 }
             }
@@ -131,3 +133,79 @@ macro_rules! impl_tuple {
 }
 
 impl_tuple! {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}
+
+pub trait Subgroup<G: Group>: Group {
+    fn contains(g: &G) -> bool;
+    fn wrap_unchecked(g: G) -> Self;
+    fn wrap(g: G) -> Option<Self> {
+        if Self::contains(&g) {
+            Some(Self::wrap_unchecked(g))
+        } else {
+            None
+        }
+    }
+    fn unwrap(self) -> G;
+}
+
+#[derive(Clone)]
+pub struct Coset<G, H>
+where
+    G: Group,
+    H: NormalSubgroup<G>,
+{
+    g: G,
+    _sub_group_marker: PhantomData<H>,
+}
+
+impl<G, H> From<G> for Coset<G, H>
+where
+    G: Group,
+    H: NormalSubgroup<G>,
+{
+    fn from(g: G) -> Self {
+        Self {
+            g,
+            _sub_group_marker: PhantomData,
+        }
+    }
+}
+
+impl<G, H> Group for Coset<G, H>
+where
+    G: Group,
+    H: NormalSubgroup<G>,
+{
+    fn unit() -> Self {
+        G::unit().into()
+    }
+
+    fn inverse(self) -> Self {
+        self.g.inverse().into()
+    }
+
+    fn op(self, rhs: &Self) -> Self {
+        (self.g.op(&rhs.g)).into()
+    }
+}
+
+
+impl<G, H> PartialEq for Coset<G, H> 
+where
+    G: Group,
+    H: NormalSubgroup<G>,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.g.op(&other.g.inverse()) == G::unit()
+    }
+}
+pub trait NormalSubgroup<G: Group>: Subgroup<G> {
+    fn coset(g: G) -> Coset<G, Self> {
+        g.into()
+    }
+}
+
+pub trait Split<N: NormalSubgroup<Self>>: Group {
+    type H: Subgroup<Self>;
+    fn split(self) -> (N, Self::H);
+}
+
