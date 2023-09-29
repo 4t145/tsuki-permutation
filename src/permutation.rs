@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
-use crate::{Alternating, Group, Parity};
-
+use crate::{Alternating, FiniteGroup, Group, Parity};
+pub type S<const N: usize> = Permutation<N>;
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Permutation<const N: usize> {
     pub perm: [u8; N],
@@ -32,28 +32,35 @@ impl<const N: usize> Permutation<N> {
     pub unsafe fn new_unchecked(perm: [u8; N]) -> Self {
         Self { perm }
     }
-    pub fn unit() -> Self {
+
+    pub const fn unit() -> Self {
         let mut perm = [0; N];
-        for (i, p) in perm.iter_mut().enumerate() {
-            *p = i as u8;
+        let mut idx = 0;
+        while idx < N {
+            perm[idx] = idx as u8;
+            idx += 1;
         }
         Self { perm }
     }
 
     // O(n)
-    pub fn compose(&self, other: &Self) -> Self {
+    pub const fn compose(&self, other: &Self) -> Self {
         let mut perm = [0; N];
-        for (i, p) in perm.iter_mut().enumerate() {
-            *p = self.perm[other.perm[i] as usize];
+        let mut idx = 0;
+        while idx < N {
+            perm[idx] = self.perm[other.perm[idx] as usize];
+            idx += 1;
         }
         Self { perm }
     }
 
     // O(n)
-    pub fn inverse(self) -> Self {
+    pub const fn inverse(self) -> Self {
         let mut perm = [0; N];
-        for idx in 0..N {
-            perm[self.perm[idx] as usize] = idx as u8
+        let mut idx = 0;
+        while idx < N {
+            perm[self.perm[idx] as usize] = idx as u8;
+            idx += 1;
         }
         Self { perm }
     }
@@ -131,6 +138,27 @@ impl<const N: usize> Group for Permutation<N> {
     }
     fn op(self, rhs: &Self) -> Self {
         self.compose(rhs)
+    }
+}
+
+impl<const N: usize> FiniteGroup for Permutation<N> {
+    fn order() -> usize {
+        N
+    }
+
+    fn enumerate() -> Box<dyn Iterator<Item = Self>>
+    where
+        Self: Sized,
+    {
+        Box::new((0..N).map(|i| {
+            let mut perm = [0; N];
+            let mut idx = 0;
+            while idx < N {
+                perm[idx] = (idx + i) as u8 % N as u8;
+                idx += 1;
+            }
+            unsafe { Self::new_unchecked(perm) }
+        }))
     }
 }
 
